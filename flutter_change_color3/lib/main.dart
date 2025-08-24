@@ -40,20 +40,22 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: ColorTapScreen(),
+      home: const ColorTapScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
 class ColorTapScreen extends StatefulWidget {
+  const ColorTapScreen({super.key});
+
   @override
-  _ColorTapScreenState createState() => _ColorTapScreenState();
+  ColorTapScreenState createState() => ColorTapScreenState();
 }
 
-class _ColorTapScreenState extends State<ColorTapScreen>
+class ColorTapScreenState extends State<ColorTapScreen>
     with TickerProviderStateMixin {
-  Color backgroundColor = Colors.white;
+  Color backgroundColor = Colors.green;
   int tapCount = 0;
   String colorHex = '#FFFFFF';
   late AnimationController _animationController;
@@ -66,11 +68,11 @@ class _ColorTapScreenState extends State<ColorTapScreen>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
       vsync: this,
     );
     _textAnimationController = AnimationController(
-      duration: Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 200),
       vsync: this,
     );
     
@@ -108,15 +110,17 @@ class _ColorTapScreenState extends State<ColorTapScreen>
   }
 
   String colorToHex(Color color) {
-    return '#${color.value.toRadixString(16).substring(2).toUpperCase()}';
+    // Use toARGB32() instead of deprecated color.value
+    int argb = color.toARGB32();
+    return '#${argb.toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}';
   }
 
   Color getContrastingTextColor(Color backgroundColor) {
     // Calculate luminance to determine if text should be black or white
-    double luminance = (0.299 * backgroundColor.red + 
-                      0.587 * backgroundColor.green + 
-                      0.114 * backgroundColor.blue) / 255;
-    
+    // double luminance = (0.299 * backgroundColor.toARGB32() + 
+    //                   0.587 * backgroundColor.g + 
+    //                   0.114 * backgroundColor.b) / 255;
+    double luminance = backgroundColor.computeLuminance();
     return luminance > 0.5 ? Colors.black : Colors.white;
   }
 
@@ -150,7 +154,7 @@ class _ColorTapScreenState extends State<ColorTapScreen>
             return Transform.scale(
               scale: _scaleAnimation.value,
               child: AnimatedContainer(
-                duration: Duration(milliseconds: 500),
+                duration: const Duration(milliseconds: 500),
                 curve: Curves.easeInOut,
                 width: double.infinity,
                 height: double.infinity,
@@ -173,9 +177,9 @@ class _ColorTapScreenState extends State<ColorTapScreen>
                                 color: textColor,
                                 shadows: [
                                   Shadow(
-                                    offset: Offset(2, 2),
+                                    offset: const Offset(2, 2),
                                     blurRadius: 4,
-                                    color: textColor.withOpacity(0.3),
+                                    color: textColor.withValues(alpha: 0.3),
                                   ),
                                 ],
                               ),
@@ -184,29 +188,29 @@ class _ColorTapScreenState extends State<ColorTapScreen>
                         },
                       ),
                       
-                      SizedBox(height: 40),
+                      const SizedBox(height: 40),
                       
                       // Tap instruction
                       Text(
                         'Tap anywhere to change color',
                         style: TextStyle(
                           fontSize: 16,
-                          color: textColor.withOpacity(0.8),
+                          color: textColor.withValues(alpha: 0.8),
                           fontStyle: FontStyle.italic,
                         ),
                       ),
                       
-                      SizedBox(height: 60),
+                      const SizedBox(height: 60),
                       
                       // Color info card
                       Container(
-                        padding: EdgeInsets.all(20),
-                        margin: EdgeInsets.symmetric(horizontal: 40),
+                        padding: const EdgeInsets.all(20),
+                        margin: const EdgeInsets.symmetric(horizontal: 40),
                         decoration: BoxDecoration(
-                          color: textColor.withOpacity(0.1),
+                          color: textColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(15),
                           border: Border.all(
-                            color: textColor.withOpacity(0.3),
+                            color: textColor.withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -219,7 +223,7 @@ class _ColorTapScreenState extends State<ColorTapScreen>
                                   'Color Code:',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: textColor.withOpacity(0.8),
+                                    color: textColor.withValues(alpha: 0.8),
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -234,7 +238,7 @@ class _ColorTapScreenState extends State<ColorTapScreen>
                                 ),
                               ],
                             ),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 8),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -242,12 +246,12 @@ class _ColorTapScreenState extends State<ColorTapScreen>
                                   'RGB:',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: textColor.withOpacity(0.8),
+                                    color: textColor.withValues(alpha: 0.8),
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
                                 Text(
-                                  '(${backgroundColor.red}, ${backgroundColor.green}, ${backgroundColor.blue})',
+                                  '(${(backgroundColor.r * 255.0).round()}, ${(backgroundColor.g * 255.0).round()}, ${(backgroundColor.b * 255.0).round()})',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: textColor,
@@ -261,13 +265,13 @@ class _ColorTapScreenState extends State<ColorTapScreen>
                         ),
                       ),
                       
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       
                       // Tap counter
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         decoration: BoxDecoration(
-                          color: textColor.withOpacity(0.1),
+                          color: textColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(25),
                         ),
                         child: Text(
