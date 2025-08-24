@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 void main() {
@@ -10,30 +12,285 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    // return MaterialApp(
+    //   title: 'Flutter Demo',
+    //   theme: ThemeData(
+    //     // This is the theme of your application.
+    //     //
+    //     // TRY THIS: Try running your application with "flutter run". You'll see
+    //     // the application has a purple toolbar. Then, without quitting the app,
+    //     // try changing the seedColor in the colorScheme below to Colors.green
+    //     // and then invoke "hot reload" (save your changes or press the "hot
+    //     // reload" button in a Flutter-supported IDE, or press "r" if you used
+    //     // the command line to start the app).
+    //     //
+    //     // Notice that the counter didn't reset back to zero; the application
+    //     // state is not lost during the reload. To reset the state, use hot
+    //     // restart instead.
+    //     //
+    //     // This works for code too, not just values: Most code changes can be
+    //     // tested with just a hot reload.
+    //     colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+    //   ),
+    //   home: const MyHomePage(title: 'Flutter Demo Home Page'),
+    // );
+
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Color Tap App',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: ColorTapScreen(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
+
+class ColorTapScreen extends StatefulWidget {
+  @override
+  _ColorTapScreenState createState() => _ColorTapScreenState();
+}
+
+class _ColorTapScreenState extends State<ColorTapScreen>
+    with TickerProviderStateMixin {
+  Color backgroundColor = Colors.white;
+  int tapCount = 0;
+  String colorHex = '#FFFFFF';
+  late AnimationController _animationController;
+  late AnimationController _textAnimationController;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _textScaleAnimation;
+  final Random _random = Random();
+  
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _textAnimationController = AnimationController(
+      duration: Duration(milliseconds: 200),
+      vsync: this,
+    );
+    
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.1,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.elasticOut,
+    ));
+    
+    _textScaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.2,
+    ).animate(CurvedAnimation(
+      parent: _textAnimationController,
+      curve: Curves.bounceOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _textAnimationController.dispose();
+    super.dispose();
+  }
+
+  Color generateRandomColor() {
+    // Generate RGB values (0-255 each) for 16,777,216 possible colors
+    int red = _random.nextInt(256);
+    int green = _random.nextInt(256);
+    int blue = _random.nextInt(256);
+    
+    return Color.fromARGB(255, red, green, blue);
+  }
+
+  String colorToHex(Color color) {
+    return '#${color.value.toRadixString(16).substring(2).toUpperCase()}';
+  }
+
+  Color getContrastingTextColor(Color backgroundColor) {
+    // Calculate luminance to determine if text should be black or white
+    double luminance = (0.299 * backgroundColor.red + 
+                      0.587 * backgroundColor.green + 
+                      0.114 * backgroundColor.blue) / 255;
+    
+    return luminance > 0.5 ? Colors.black : Colors.white;
+  }
+
+  void onScreenTap() {
+    setState(() {
+      backgroundColor = generateRandomColor();
+      colorHex = colorToHex(backgroundColor);
+      tapCount++;
+    });
+    
+    // Trigger animations
+    _animationController.forward().then((_) {
+      _animationController.reverse();
+    });
+    
+    _textAnimationController.forward().then((_) {
+      _textAnimationController.reverse();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Color textColor = getContrastingTextColor(backgroundColor);
+    
+    return Scaffold(
+      body: GestureDetector(
+        onTap: onScreenTap,
+        child: AnimatedBuilder(
+          animation: _animationController,
+          builder: (context, child) {
+            return Transform.scale(
+              scale: _scaleAnimation.value,
+              child: AnimatedContainer(
+                duration: Duration(milliseconds: 500),
+                curve: Curves.easeInOut,
+                width: double.infinity,
+                height: double.infinity,
+                color: backgroundColor,
+                child: SafeArea(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Main text
+                      AnimatedBuilder(
+                        animation: _textAnimationController,
+                        builder: (context, child) {
+                          return Transform.scale(
+                            scale: _textScaleAnimation.value,
+                            child: Text(
+                              'Hello there',
+                              style: TextStyle(
+                                fontSize: 48,
+                                fontWeight: FontWeight.bold,
+                                color: textColor,
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(2, 2),
+                                    blurRadius: 4,
+                                    color: textColor.withOpacity(0.3),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      
+                      SizedBox(height: 40),
+                      
+                      // Tap instruction
+                      Text(
+                        'Tap anywhere to change color',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: textColor.withOpacity(0.8),
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      
+                      SizedBox(height: 60),
+                      
+                      // Color info card
+                      Container(
+                        padding: EdgeInsets.all(20),
+                        margin: EdgeInsets.symmetric(horizontal: 40),
+                        decoration: BoxDecoration(
+                          color: textColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(15),
+                          border: Border.all(
+                            color: textColor.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Color Code:',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: textColor.withOpacity(0.8),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  colorHex,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: textColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'monospace',
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'RGB:',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: textColor.withOpacity(0.8),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  '(${backgroundColor.red}, ${backgroundColor.green}, ${backgroundColor.blue})',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: textColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'monospace',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      SizedBox(height: 20),
+                      
+                      // Tap counter
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: textColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: Text(
+                          'Taps: $tapCount',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: textColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
