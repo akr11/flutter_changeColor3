@@ -2,14 +2,17 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+/// Entry point of the application.
 void main() {
   runApp(const MyApp());
 }
 
+/// Root widget of the Color Tap App.
 class MyApp extends StatelessWidget {
+  /// Creates a new MyApp widget.
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  /// Builds the MaterialApp for the application.
   @override
   Widget build(BuildContext context) {
     // return MaterialApp(
@@ -46,24 +49,35 @@ class MyApp extends StatelessWidget {
   }
 }
 
+/// Stateful widget for the main color-tapping screen.
 class ColorTapScreen extends StatefulWidget {
+  /// Creates a new ColorTapScreen widget.
   const ColorTapScreen({super.key});
 
+  /// Creates the state for this widget.
   @override
   ColorTapScreenState createState() => ColorTapScreenState();
 }
 
+/// State for the ColorTapScreen widget.
 class ColorTapScreenState extends State<ColorTapScreen>
     with TickerProviderStateMixin {
+  /// The current background color of the screen.
   Color backgroundColor = Colors.green;
+
+  /// The number of times the screen has been tapped.
   int tapCount = 0;
+
+  /// The hexadecimal representation of the current color.
   String colorHex = '#FFFFFF';
+
   late AnimationController _animationController;
   late AnimationController _textAnimationController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _textScaleAnimation;
   final Random _random = Random();
   
+  /// Initializes the state, setting up animation controllers.
   @override
   void initState() {
     super.initState();
@@ -82,7 +96,7 @@ class ColorTapScreenState extends State<ColorTapScreen>
     ).animate(CurvedAnimation(
       parent: _animationController,
       curve: Curves.elasticOut,
-    ));
+    ),);
     
     _textScaleAnimation = Tween<double>(
       begin: 1.0,
@@ -90,9 +104,10 @@ class ColorTapScreenState extends State<ColorTapScreen>
     ).animate(CurvedAnimation(
       parent: _textAnimationController,
       curve: Curves.bounceOut,
-    ));
+    ),);
   }
 
+  /// Disposes of resources, including animation controllers.
   @override
   void dispose() {
     _animationController.dispose();
@@ -100,30 +115,38 @@ class ColorTapScreenState extends State<ColorTapScreen>
     super.dispose();
   }
 
+  /// Generates a random color using RGB values.
   Color generateRandomColor() {
     // Generate RGB values (0-255 each) for 16,777,216 possible colors
-    int red = _random.nextInt(256);
-    int green = _random.nextInt(256);
-    int blue = _random.nextInt(256);
+    final int red = _random.nextInt(256);
+    final int green = _random.nextInt(256);
+    final int blue = _random.nextInt(256);
     
     return Color.fromARGB(255, red, green, blue);
   }
 
+  /// Converts a Color to its hexadecimal string representation (RRGGBB).
   String colorToHex(Color color) {
-    // Use toARGB32() instead of deprecated color.value
-    int argb = color.toARGB32();
-    return '#${argb.toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}';
+    // Use toARGB32() as replacement for deprecated color.value
+    final int argb = color.toARGB32();
+    // Break long line for readability
+    final String hexPart = argb
+        .toRadixString(16)
+        .padLeft(8, '0')
+        .substring(2)
+        .toUpperCase();
+    return '#$hexPart';
   }
 
+  /// Returns a contrasting text color (black or white) 
+  /// based on background luminance.
   Color getContrastingTextColor(Color backgroundColor) {
-    // Calculate luminance to determine if text should be black or white
-    // double luminance = (0.299 * backgroundColor.toARGB32() + 
-    //                   0.587 * backgroundColor.g + 
-    //                   0.114 * backgroundColor.b) / 255;
-    double luminance = backgroundColor.computeLuminance();
+    // Use built-in computeLuminance() for accurate WCAG relative luminance
+    final double luminance = backgroundColor.computeLuminance();
     return luminance > 0.5 ? Colors.black : Colors.white;
   }
 
+  /// Handles screen taps to change color and update state.
   void onScreenTap() {
     setState(() {
       backgroundColor = generateRandomColor();
@@ -141,9 +164,15 @@ class ColorTapScreenState extends State<ColorTapScreen>
     });
   }
 
+  /// Builds the UI for the color tap screen.
   @override
   Widget build(BuildContext context) {
-    Color textColor = getContrastingTextColor(backgroundColor);
+    final Color textColor = getContrastingTextColor(backgroundColor);
+    
+    // Compute RGB integers to shorten display line
+    final int redInt = (backgroundColor.r * 255.0).round();
+    final int greenInt = (backgroundColor.g * 255.0).round();
+    final int blueInt = (backgroundColor.b * 255.0).round();
     
     return Scaffold(
       body: GestureDetector(
@@ -179,7 +208,9 @@ class ColorTapScreenState extends State<ColorTapScreen>
                                   Shadow(
                                     offset: const Offset(2, 2),
                                     blurRadius: 4,
-                                    color: textColor.withValues(alpha: 0.3),
+                                    color: textColor.withValues(
+                                      alpha: textColor.a * 0.3,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -195,7 +226,9 @@ class ColorTapScreenState extends State<ColorTapScreen>
                         'Tap anywhere to change color',
                         style: TextStyle(
                           fontSize: 16,
-                          color: textColor.withValues(alpha: 0.8),
+                          color: textColor.withValues(
+                            alpha: textColor.a * 0.8,
+                          ),
                           fontStyle: FontStyle.italic,
                         ),
                       ),
@@ -207,11 +240,14 @@ class ColorTapScreenState extends State<ColorTapScreen>
                         padding: const EdgeInsets.all(20),
                         margin: const EdgeInsets.symmetric(horizontal: 40),
                         decoration: BoxDecoration(
-                          color: textColor.withValues(alpha: 0.1),
+                          color: textColor.withValues(
+                            alpha: textColor.a * 0.1,
+                          ),
                           borderRadius: BorderRadius.circular(15),
                           border: Border.all(
-                            color: textColor.withValues(alpha: 0.3),
-                            width: 1,
+                            color: textColor.withValues(
+                              alpha: textColor.a * 0.3,
+                            ),
                           ),
                         ),
                         child: Column(
@@ -223,7 +259,9 @@ class ColorTapScreenState extends State<ColorTapScreen>
                                   'Color Code:',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: textColor.withValues(alpha: 0.8),
+                                    color: textColor.withValues(
+                                      alpha: textColor.a * 0.8,
+                                    ),
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -246,12 +284,14 @@ class ColorTapScreenState extends State<ColorTapScreen>
                                   'RGB:',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: textColor.withValues(alpha: 0.8),
+                                    color: textColor.withValues(
+                                      alpha: textColor.a * 0.8,
+                                    ),
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
                                 Text(
-                                  '(${(backgroundColor.r * 255.0).round()}, ${(backgroundColor.g * 255.0).round()}, ${(backgroundColor.b * 255.0).round()})',
+                                  '($redInt, $greenInt, $blueInt)',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: textColor,
@@ -269,9 +309,11 @@ class ColorTapScreenState extends State<ColorTapScreen>
                       
                       // Tap counter
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: textColor.withValues(alpha: 0.1),
+                        padding: 
+                        const EdgeInsets.symmetric(horizontal: 20, 
+                        vertical: 10,),
+                        decoration: BoxDecoration(color: textColor.withValues(
+                            alpha: textColor.a * 0.1,),
                           borderRadius: BorderRadius.circular(25),
                         ),
                         child: Text(
@@ -295,28 +337,24 @@ class ColorTapScreenState extends State<ColorTapScreen>
   }
 }
 
-
+/// Example home page widget (commented out in MyApp).
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  /// Creates a new MyHomePage widget.
+  const MyHomePage({required this.title});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
+  /// The title of the home page.
   final String title;
 
+  /// Creates the state for this widget.
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  MyHomePageState createState() => MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+/// State for the MyHomePage widget.
+class MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
+  /// Increments the counter.
   void _incrementCounter() {
     setState(() {
       // This call to setState tells the Flutter framework that something has
@@ -328,6 +366,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  /// Builds the UI for the home page.
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
